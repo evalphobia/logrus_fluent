@@ -42,13 +42,13 @@ func TestLogEntryMessageReceived(t *testing.T) {
 func startMockServer(t *testing.T) int {
 	l, err := net.Listen("tcp", testHOST+":0")
 	if err != nil {
-		t.Errorf("Error listening:", err.Error())
+		t.Errorf("Error listening: %s", err.Error())
 	}
 	go func() {
 		for {
 			conn, err := l.Accept()
 			if err != nil {
-				t.Errorf("Error accepting:", err.Error())
+				t.Errorf("Error accepting: %s", err.Error())
 			}
 			go handleRequest(conn, l)
 		}
