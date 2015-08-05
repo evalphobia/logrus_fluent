@@ -1,3 +1,6 @@
+[![Build Status](https://drone.io/github.com/evalphobia/wizard/status.png)](https://drone.io/github.com/evalphobia/wizard/latest)  [![Coverage Status](https://coveralls.io/repos/evalphobia/logrus_fluent/badge.svg?branch=master&service=github)](https://coveralls.io/github/evalphobia/logrus_fluent?branch=master)
+
+
 # Fluentd Hook for Logrus <img src="http://i.imgur.com/hTeVwmJ.png" width="40" height="40" alt=":walrus:" class="emoji" title=":walrus:"/>
 
 ## Usage
