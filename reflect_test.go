@@ -7,24 +7,24 @@ import (
 )
 
 type Creature struct {
-	Name string
-	Human bool
+	Name   string
+	Human  bool
 	Height int
 	Weight int
-	Alias string `fluent:"nickname"`
+	Alias  string `fluent:"nickname"`
 }
 
 func TestConvertToValueStruct(t *testing.T) {
 	assert := assert.New(t)
 
 	v := Creature{
-		Name: "cat",
+		Name:   "cat",
 		Height: 50,
 		Weight: 4,
-		Alias: "tama",
+		Alias:  "tama",
 	}
 	result := ConvertToValue(v, TagName)
-	
+
 	r, ok := result.(map[string]interface{})
 	assert.True(ok)
 	assert.Equal(v.Name, r["Name"])
@@ -36,12 +36,12 @@ func TestConvertToValueStruct(t *testing.T) {
 
 func TestConvertToValueSlice(t *testing.T) {
 	assert := assert.New(t)
-	
+
 	var list []*Creature
-	list = append(list, &Creature{Name:"cat"})
-	list = append(list, &Creature{Name:"dog"})
+	list = append(list, &Creature{Name: "cat"})
+	list = append(list, &Creature{Name: "dog"})
 	list = append(list, nil)
-	list = append(list, &Creature{Name:"bird"})
+	list = append(list, &Creature{Name: "bird"})
 
 	result := ConvertToValue(list, TagName)
 	r, ok := result.([]interface{})
@@ -53,7 +53,7 @@ func TestConvertToValueNil(t *testing.T) {
 	assert := assert.New(t)
 	result := ConvertToValue(nil, TagName)
 	assert.Equal(nil, result)
-	
+
 	var ptr *Creature
 	result = ConvertToValue(ptr, TagName)
 	assert.Equal(nil, result)
