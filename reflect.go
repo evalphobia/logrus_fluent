@@ -16,6 +16,8 @@ func ConvertToValue(p interface{}, tagName string) interface{} {
 		return convertFromMap(rv, tagName)
 	case reflect.Slice:
 		return convertFromSlice(rv, tagName)
+	case reflect.Chan:
+		return nil
 	case reflect.Invalid:
 		return nil
 	default:
