@@ -33,10 +33,10 @@ func NewHook(host string, port int) *fluentHook {
 	}
 }
 
-func getTagAndDel(entry *logrus.Entry) string {
+func getTagAndDel(entry *logrus.Entry, data logrus.Fields) string {
 	var v interface{}
 	var ok bool
-	if v, ok = entry.Data[TagField]; !ok {
+	if v, ok = data[TagField]; !ok {
 		return entry.Message
 	}
 
@@ -44,17 +44,17 @@ func getTagAndDel(entry *logrus.Entry) string {
 	if val, ok = v.(string); !ok {
 		return entry.Message
 	}
-	delete(entry.Data, TagField)
+	delete(data, TagField)
 	return val
 }
 
-func setLevelString(entry *logrus.Entry) {
-	entry.Data["level"] = entry.Level.String()
+func setLevelString(entry *logrus.Entry, data logrus.Fields) {
+	data["level"] = entry.Level.String()
 }
 
-func setMessage(entry *logrus.Entry) {
-	if _, ok := entry.Data[MessageField]; !ok {
-		entry.Data[MessageField] = entry.Message
+func setMessage(entry *logrus.Entry, data logrus.Fields) {
+	if _, ok := data[MessageField]; !ok {
+		data[MessageField] = entry.Message
 	}
 }
 
@@ -68,14 +68,20 @@ func (hook *fluentHook) Fire(entry *logrus.Entry) error {
 	}
 	defer logger.Close()
 
-	setLevelString(entry)
-	tag := getTagAndDel(entry)
-	if tag != entry.Message {
-		setMessage(entry)
+	// Create a map for passing to FluentD
+	data := make(logrus.Fields)
+	for k, v := range entry.Data {
+		data[k] = v
 	}
 
-	data := ConvertToValue(entry.Data, TagName)
-	err = logger.PostWithTime(tag, entry.Time, data)
+	setLevelString(entry, data)
+	tag := getTagAndDel(entry, data)
+	if tag != entry.Message {
+		setMessage(entry, data)
+	}
+
+	fluentData := ConvertToValue(data, TagName)
+	err = logger.PostWithTime(tag, entry.Time, fluentData)
 	return err
 }
 
