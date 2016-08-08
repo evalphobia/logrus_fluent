@@ -27,4 +27,4 @@ func main() {
 
 Some logrus fields have a special meaning in this hook.
 
-- `tag` is used as a fluentd tag. (if `tag` is omitted, Entry.Message is used as a fluentd tag)
+- `tag` is used as a fluentd tag. (if `tag` is omitted, Entry.Message is used as a fluentd tag, unless a static tag is set for the hook with `hook.SetTag`)
