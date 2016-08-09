@@ -81,10 +81,38 @@ func TestLogEntryMessageReceived(t *testing.T) {
 	}
 }
 
+func TestLogEntryWithStaticTag(t *testing.T) {
+	f := logrus.Fields{
+		"tag":   "something",
+		"value": "data",
+	}
+	result := testLogWithStaticTag(t, f, "MyMessage5")
+
+	switch {
+	case !strings.Contains(result, "testing"):
+		t.Errorf("message did not contain the correct, static tag")
+	case !strings.Contains(result, "something"):
+		t.Errorf("message did not contain the tag field")
+	}
+}
+
 func testLog(t *testing.T, f logrus.Fields, message string) string {
 	data = make(chan string, 1)
 	port := startMockServer(t)
 	hook := NewHook(testHOST, port)
+	logger := logrus.New()
+	logger.Hooks.Add(hook)
+
+	logger.WithFields(f).Error(message)
+
+	return <-data
+}
+
+func testLogWithStaticTag(t *testing.T, f logrus.Fields, message string) string {
+	data = make(chan string, 1)
+	port := startMockServer(t)
+	hook := NewHook(testHOST, port)
+	hook.SetTag("testing")
 	logger := logrus.New()
 	logger.Hooks.Add(hook)
 

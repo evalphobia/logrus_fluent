@@ -23,6 +23,7 @@ type fluentHook struct {
 	host   string
 	port   int
 	levels []logrus.Level
+	tag    *string
 }
 
 func NewHook(host string, port int) *fluentHook {
@@ -30,6 +31,7 @@ func NewHook(host string, port int) *fluentHook {
 		host:   host,
 		port:   port,
 		levels: defaultLevels,
+		tag:    nil,
 	}
 }
 
@@ -75,9 +77,14 @@ func (hook *fluentHook) Fire(entry *logrus.Entry) error {
 	}
 
 	setLevelString(entry, data)
-	tag := getTagAndDel(entry, data)
-	if tag != entry.Message {
-		setMessage(entry, data)
+	var tag string
+	if hook.tag == nil {
+		tag = getTagAndDel(entry, data)
+		if tag != entry.Message {
+			setMessage(entry, data)
+		}
+	} else {
+		tag = *hook.tag
 	}
 
 	fluentData := ConvertToValue(data, TagName)
@@ -91,4 +98,12 @@ func (hook *fluentHook) Levels() []logrus.Level {
 
 func (hook *fluentHook) SetLevels(levels []logrus.Level) {
 	hook.levels = levels
+}
+
+func (hook *fluentHook) Tag() string {
+	return *hook.tag
+}
+
+func (hook *fluentHook) SetTag(tag string) {
+	hook.tag = &tag
 }
