@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/evalphobia/logrus_fluent.svg?branch=master)](https://travis-ci.org/evalphobia/logrus_fluent)  [![Coverage Status](https://coveralls.io/repos/evalphobia/logrus_fluent/badge.svg?branch=master&service=github)](https://coveralls.io/github/evalphobia/logrus_fluent?branch=master)
+[![Build Status](https://travis-ci.org/evalphobia/logrus_fluent.svg?branch=master)](https://travis-ci.org/evalphobia/logrus_fluent)  [![Coverage Status](https://coveralls.io/repos/evalphobia/logrus_fluent/badge.svg?branch=master&service=github)](https://coveralls.io/github/evalphobia/logrus_fluent?branch=master) [![GoDoc](https://godoc.org/github.com/evalphobia/logrus_fluent?status.svg)](https://godoc.org/github.com/evalphobia/logrus_fluent)
 
 
 # Fluentd Hook for Logrus <img src="http://i.imgur.com/hTeVwmJ.png" width="40" height="40" alt=":walrus:" class="emoji" title=":walrus:"/>
@@ -12,11 +12,19 @@ import (
 )
 
 func main() {
-	hook := logrus_fluent.NewHook("localhost", 24224)
+	hook, err := logrus_fluent.New("localhost", 24224)
+	if err != nil {
+		panic(err)
+	}
+
+	// set custom fire level
 	hook.SetLevels([]logrus.Level{
 		logrus.PanicLevel,
 		logrus.ErrorLevel,
 	})
+
+	// set static tag
+	hook.SetTag("original.tag")
 
 	logrus.AddHook(hook)
 }
