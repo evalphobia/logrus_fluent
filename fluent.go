@@ -106,14 +106,9 @@ func (hook *FluentHook) Fire(entry *logrus.Entry) error {
 	}
 
 	setLevelString(entry, data)
-	var tag string
-	if hook.tag == nil {
-		tag = getTagAndDel(entry, data)
-		if tag != entry.Message {
-			setMessage(entry, data)
-		}
-	} else {
-		tag = *hook.tag
+	tag := hook.getTagAndDel(entry, data)
+	if tag != entry.Message {
+		setMessage(entry, data)
 	}
 
 	fluentData := ConvertToValue(data, TagName)
@@ -121,19 +116,29 @@ func (hook *FluentHook) Fire(entry *logrus.Entry) error {
 	return err
 }
 
-func getTagAndDel(entry *logrus.Entry, data logrus.Fields) string {
-	var v interface{}
-	var ok bool
-	if v, ok = data[TagField]; !ok {
+// getTagAndDel extracts tag data from log entry and custom log fields.
+// 1. if tag is set in the hook, use it.
+// 2. if tag is set in custom fields, use it.
+// 3. if cannot find tag data, use entry.Message as tag.
+func (hook *FluentHook) getTagAndDel(entry *logrus.Entry, data logrus.Fields) string {
+	// use static tag from
+	if hook.tag != nil {
+		return *hook.tag
+	}
+
+	tagField, ok := data[TagField]
+	if !ok {
 		return entry.Message
 	}
 
-	var val string
-	if val, ok = v.(string); !ok {
+	tag, ok := tagField.(string)
+	if !ok {
 		return entry.Message
 	}
+
+	// remove tag from data fields
 	delete(data, TagField)
-	return val
+	return tag
 }
 
 func setLevelString(entry *logrus.Entry, data logrus.Fields) {

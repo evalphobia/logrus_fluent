@@ -18,9 +18,29 @@ var (
 )
 
 const (
-	defaultLoopCount = 5 // assertion count
-	defaultStaticTag = "STATIC_TAG"
+	defaultLoopCount = 10 // assertion count
 	testHOST         = "localhost"
+)
+
+// test data and assertion
+const (
+	fieldValue       = "data"
+	assertFieldValue = "value\xa4data"
+
+	fieldTag                  = "debug.test"
+	assertFieldTag            = "\xa3tag\xaadebug.test"
+	assertFieldTagAsFluentTag = "\x94\xaadebug.test\xd2"
+
+	fieldMessage       = "FieldMessage"
+	assertFieldMessage = "\xa7message\xacFieldMessage"
+
+	entryMessage                  = "MyEntryMessage"
+	assertEntryMessage            = "\xa7message\xaeMyEntryMessage"
+	assertEntryMessageAsFluentTag = "\x94\xaeMyEntryMessage\xd2"
+
+	staticTag                  = "STATIC_TAG"
+	assertStaticTag            = "\xa3tag\xaaSTATIC_TAG"
+	assertStaticTagAsFluentTag = "\x94\xaaSTATIC_TAG\xd2"
 )
 
 func TestNew(t *testing.T) {
@@ -105,7 +125,7 @@ func TestTag(t *testing.T) {
 		t.Errorf("hook.Tag() should be empty, but %s", tag)
 	}
 
-	defaultTag := defaultStaticTag
+	defaultTag := staticTag
 	hook.tag = &defaultTag
 	tag = hook.Tag()
 	switch {
@@ -124,108 +144,173 @@ func TestSetTag(t *testing.T) {
 		t.Errorf("hook.tag should be nil, but %s", *tag)
 	}
 
-	hook.SetTag(defaultStaticTag)
+	hook.SetTag(staticTag)
 	tag = hook.tag
 	switch {
 	case tag == nil:
 		t.Errorf("hook.tag should not be nil")
-	case *tag != defaultStaticTag:
-		t.Errorf("hook.tag should be %s, but %s", defaultStaticTag, *tag)
+	case *tag != staticTag:
+		t.Errorf("hook.tag should be %s, but %s", staticTag, *tag)
 	}
 }
 
 func TestLogEntryMessageReceived(t *testing.T) {
 	f := logrus.Fields{
-		"value": "data",
+		"value": fieldValue,
 	}
 
 	assertion := func(result string) {
 		switch {
-		case !strings.Contains(result, "value\xa4data"):
-			t.Errorf("message did not contain value")
-		case !strings.Contains(result, "\xaaMyMessage1"):
-			t.Errorf("message did not contain entry.Message")
+		case !strings.Contains(result, assertEntryMessageAsFluentTag):
+			t.Errorf("message should contain fluent-tag from entry.Message")
+		case !strings.Contains(result, assertFieldValue):
+			t.Errorf("message should contain value from field")
 		}
 	}
-	assertLogHook(t, f, "MyMessage1", assertion)
+	assertLogHook(t, f, entryMessage, assertion)
 
 }
 
 func TestLogEntryMessageReceivedWithTag(t *testing.T) {
 	f := logrus.Fields{
-		"tag":   "debug.test",
-		"value": "data",
+		"tag":   fieldTag,
+		"value": fieldValue,
 	}
 
 	assertion := func(result string) {
 		switch {
-		case !strings.Contains(result, "\x94\xaadebug.test\xd2"):
-			t.Errorf("message did not contain tag")
-		case !strings.Contains(result, "value\xa4data"):
-			t.Errorf("message did not contain value")
-		case !strings.Contains(result, "\xa7message\xaaMyMessage2"):
-			t.Errorf("message did not contain entry.Message")
+		case !strings.Contains(result, assertFieldTagAsFluentTag):
+			t.Errorf("message should contain fluent-tag from field")
+		case !strings.Contains(result, assertFieldValue):
+			t.Errorf("message should contain value from field")
+		case !strings.Contains(result, assertEntryMessage):
+			t.Errorf("message should contain message from entry.Message")
 		}
 	}
-	assertLogHook(t, f, "MyMessage2", assertion)
+	assertLogHook(t, f, entryMessage, assertion)
 }
 
 func TestLogEntryMessageReceivedWithMessage(t *testing.T) {
 	fmt.Printf("TestLogEntryMessageReceivedWithMessage...\n")
 
 	f := logrus.Fields{
-		"message": "message!",
-		"value":   "data",
+		"message": fieldMessage,
+		"value":   fieldValue,
 	}
 
 	assertion := func(result string) {
 		switch {
-		case !strings.Contains(result, "\xaaMyMessage3\xd2"):
-			t.Errorf("message did not contain tag from entry.Message")
-		case !strings.Contains(result, "value\xa4data"):
-			t.Errorf("message did not contain value")
-		case !strings.Contains(result, "\xa7message\xa8message!"):
-			t.Errorf("message did not contain message")
+		case !strings.Contains(result, assertEntryMessageAsFluentTag):
+			t.Errorf("message should contain fluent-tag from entry.Message")
+		case !strings.Contains(result, assertFieldValue):
+			t.Errorf("message should contain value from field")
+		case !strings.Contains(result, assertFieldMessage):
+			t.Errorf("message should contain message from field")
 		}
 	}
-	assertLogHook(t, f, "MyMessage3", assertion)
+	assertLogHook(t, f, entryMessage, assertion)
 }
 
 func TestLogEntryMessageReceivedWithTagAndMessage(t *testing.T) {
 	f := logrus.Fields{
-		"message": "message!",
-		"tag":     "debug.test",
-		"value":   "data",
+		"message": fieldMessage,
+		"tag":     fieldTag,
+		"value":   fieldValue,
 	}
 
 	assertion := func(result string) {
 		switch {
-		case !strings.Contains(result, "\x94\xaadebug.test\xd2"):
-			t.Errorf("message did not contain tag")
-		case !strings.Contains(result, "value\xa4data"):
-			t.Errorf("message did not contain value")
-		case !strings.Contains(result, "\xa7message\xa8message!"):
-			t.Errorf("message did not contain message")
+		case !strings.Contains(result, assertFieldTagAsFluentTag):
+			t.Errorf("message should contain fluent-tag from field")
+		case !strings.Contains(result, assertFieldValue):
+			t.Errorf("message should contain value from field")
+		case !strings.Contains(result, assertFieldMessage):
+			t.Errorf("message should contain message from field")
+		case strings.Contains(result, entryMessage):
+			t.Errorf("message should not contain entry.Message")
 		}
 	}
-	assertLogHook(t, f, "MyMessage4", assertion)
+	assertLogHook(t, f, entryMessage, assertion)
 }
 
-func TestLogEntryWithStaticTag(t *testing.T) {
+func TestLogEntryStaticTag(t *testing.T) {
 	f := logrus.Fields{
-		"tag":   "something",
-		"value": "data",
+		"value": fieldValue,
 	}
 
 	assertion := func(result string) {
 		switch {
-		case !strings.Contains(result, defaultStaticTag):
-			t.Errorf("message did not contain the correct, static tag")
-		case !strings.Contains(result, "something"):
-			t.Errorf("message did not contain the tag field")
+		case !strings.Contains(result, assertStaticTagAsFluentTag):
+			t.Errorf("message should contain fluent-tag from static tag")
+		case !strings.Contains(result, assertFieldValue):
+			t.Errorf("message should contain value from field")
+		case !strings.Contains(result, assertEntryMessage):
+			t.Errorf("message should contain message from entry.Message")
 		}
 	}
-	assertLogHookWithStaticTag(t, f, "MyMessage5", assertion)
+	assertLogHookWithStaticTag(t, f, entryMessage, assertion)
+}
+
+func TestLogEntryStaticTagWithTag(t *testing.T) {
+	f := logrus.Fields{
+		"tag":   fieldTag,
+		"value": fieldValue,
+	}
+
+	assertion := func(result string) {
+		switch {
+		case !strings.Contains(result, assertStaticTagAsFluentTag):
+			t.Errorf("message should contain fluent-tag from static tag")
+		case !strings.Contains(result, assertFieldTag):
+			t.Errorf("message should contain tag from field")
+		case !strings.Contains(result, assertFieldValue):
+			t.Errorf("message should contain value from field")
+		case !strings.Contains(result, assertEntryMessage):
+			t.Errorf("message should contain message from entry.Message")
+		}
+	}
+	assertLogHookWithStaticTag(t, f, entryMessage, assertion)
+}
+
+func TestLogEntryStaticTagWithMessage(t *testing.T) {
+	f := logrus.Fields{
+		"message": fieldMessage,
+		"value":   fieldValue,
+	}
+
+	assertion := func(result string) {
+		switch {
+		case !strings.Contains(result, assertStaticTagAsFluentTag):
+			t.Errorf("message should contain fluent-tag from static tag")
+		case !strings.Contains(result, assertFieldValue):
+			t.Errorf("message should contain value from field")
+		case strings.Contains(result, entryMessage):
+			t.Errorf("message should not contain entry.Message")
+		}
+	}
+	assertLogHookWithStaticTag(t, f, entryMessage, assertion)
+}
+
+func TestLogEntryStaticTagWithTagAndMessage(t *testing.T) {
+	f := logrus.Fields{
+		"message": fieldMessage,
+		"tag":     fieldTag,
+		"value":   fieldValue,
+	}
+
+	assertion := func(result string) {
+		switch {
+		case !strings.Contains(result, assertStaticTagAsFluentTag):
+			t.Errorf("message should contain fluent-tag from static tag")
+		case !strings.Contains(result, assertFieldValue):
+			t.Errorf("message should contain value from field")
+		case !strings.Contains(result, assertFieldMessage):
+			t.Errorf("message should contain message from field")
+		case strings.Contains(result, entryMessage):
+			t.Errorf("message should not contain entry.Message")
+		}
+	}
+	assertLogHookWithStaticTag(t, f, entryMessage, assertion)
 }
 
 func assertLogHook(t *testing.T, f logrus.Fields, message string, assertFunc func(string)) {
@@ -233,7 +318,7 @@ func assertLogHook(t *testing.T, f logrus.Fields, message string, assertFunc fun
 }
 
 func assertLogHookWithStaticTag(t *testing.T, f logrus.Fields, message string, assertFunc func(string)) {
-	assertLogMessage(t, f, message, defaultStaticTag, assertFunc)
+	assertLogMessage(t, f, message, staticTag, assertFunc)
 }
 
 func assertLogMessage(t *testing.T, f logrus.Fields, message string, tag string, assertFunc func(string)) {
