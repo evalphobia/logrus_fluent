@@ -154,6 +154,60 @@ func TestSetTag(t *testing.T) {
 	}
 }
 
+func TestAddIgnore(t *testing.T) {
+	hook := FluentHook{
+		ignoreFields: make(map[string]struct{}),
+	}
+
+	list := []string{"foo", "bar", "baz"}
+	for i, key := range list {
+		if len(hook.ignoreFields) != i {
+			t.Errorf("hook.ignoreFields has %d length, but %d", i, len(hook.ignoreFields))
+			continue
+		}
+
+		hook.AddIgnore(key)
+		if len(hook.ignoreFields) != i+1 {
+			t.Errorf("hook.ignoreFields should be added")
+			continue
+		}
+		for j := 0; j <= i; j++ {
+			k := list[j]
+			if _, ok := hook.ignoreFields[k]; !ok {
+				t.Errorf("%s should be added into hook.ignoreFields", k)
+				continue
+			}
+		}
+	}
+}
+
+func TestAddFilter(t *testing.T) {
+	hook := FluentHook{
+		filters: make(map[string]func(interface{}) interface{}),
+	}
+
+	list := []string{"foo", "bar", "baz"}
+	for i, key := range list {
+		if len(hook.filters) != i {
+			t.Errorf("hook.filters has %d length, but %d", i, len(hook.filters))
+			continue
+		}
+
+		hook.AddFilter(key, nil)
+		if len(hook.filters) != i+1 {
+			t.Errorf("hook.filters should be added")
+			continue
+		}
+		for j := 0; j <= i; j++ {
+			k := list[j]
+			if _, ok := hook.filters[k]; !ok {
+				t.Errorf("%s should be added into hook.filters", k)
+				continue
+			}
+		}
+	}
+}
+
 func TestLogEntryMessageReceived(t *testing.T) {
 	f := logrus.Fields{
 		"value": fieldValue,
@@ -191,8 +245,6 @@ func TestLogEntryMessageReceivedWithTag(t *testing.T) {
 }
 
 func TestLogEntryMessageReceivedWithMessage(t *testing.T) {
-	fmt.Printf("TestLogEntryMessageReceivedWithMessage...\n")
-
 	f := logrus.Fields{
 		"message": fieldMessage,
 		"value":   fieldValue,

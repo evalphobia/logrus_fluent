@@ -26,7 +26,21 @@ func main() {
 	// set static tag
 	hook.SetTag("original.tag")
 
+	// ignore field
+	hook.AddIgnore("context")
+
+	// filter func
+	hook.AddFilter("error", logrus_fluent.FilterError)
+
 	logrus.AddHook(hook)
+}
+
+func logging(ctx context.Context) {
+	logrus.WithFields(logrus.Fields{
+		"value":   "some content...",
+		"error":   errors.New("unknown error"), // this field will be applied filter function in the hook.
+		"context": ctx,                         // this field will be ignored in the hook.
+	}).Error("error message")
 }
 ```
 
