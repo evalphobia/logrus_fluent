@@ -6,8 +6,19 @@ import (
 )
 
 const (
-	TagName      = "fluent"
-	TagField     = "tag"
+	// TagName is struct field tag name.
+	// Some basic option is allowed in the field tag,
+	//
+	// type myStruct {
+	//     Value1: `fluent:"value_1"`    // change field name.
+	//     Value2: `fluent:"-"`          // always omit this field.
+	//     Value3: `fluent:",omitempty"` // omit this field when zero-value.
+	// }
+	TagName = "fluent"
+	// TagField is logrus field name used as fluentd tag
+	TagField = "tag"
+	// MessageField is logrus field name used as message.
+	// If missing in the log fields, entry.Message is set to this field.
 	MessageField = "message"
 )
 
@@ -30,6 +41,9 @@ type FluentHook struct {
 	port   int
 	levels []logrus.Level
 	tag    *string
+
+	ignoreFields map[string]struct{}
+	filters      map[string]func(interface{}) interface{}
 }
 
 // New returns initialized logrus hook for fluentd with persistent fluentd logger.
@@ -40,8 +54,10 @@ func New(host string, port int) (*FluentHook, error) {
 	}
 
 	return &FluentHook{
-		levels: defaultLevels,
-		Fluent: fd,
+		levels:       defaultLevels,
+		Fluent:       fd,
+		ignoreFields: make(map[string]struct{}),
+		filters:      make(map[string]func(interface{}) interface{}),
 	}, nil
 }
 
@@ -49,10 +65,12 @@ func New(host string, port int) (*FluentHook, error) {
 // (** deperecated: use New() **)
 func NewHook(host string, port int) *FluentHook {
 	return &FluentHook{
-		host:   host,
-		port:   port,
-		levels: defaultLevels,
-		tag:    nil,
+		host:         host,
+		port:         port,
+		levels:       defaultLevels,
+		tag:          nil,
+		ignoreFields: make(map[string]struct{}),
+		filters:      make(map[string]func(interface{}) interface{}),
 	}
 }
 
@@ -80,6 +98,16 @@ func (hook *FluentHook) SetTag(tag string) {
 	hook.tag = &tag
 }
 
+// AddIgnore adds field name to ignore.
+func (hook *FluentHook) AddIgnore(name string) {
+	hook.ignoreFields[name] = struct{}{}
+}
+
+// AddFilter adds a custom filter function.
+func (hook *FluentHook) AddFilter(name string, fn func(interface{}) interface{}) {
+	hook.filters[name] = fn
+}
+
 // Fire is invoked by logrus and sends log to fluentd logger.
 func (hook *FluentHook) Fire(entry *logrus.Entry) error {
 	var logger *fluent.Fluent
@@ -102,6 +130,12 @@ func (hook *FluentHook) Fire(entry *logrus.Entry) error {
 	// Create a map for passing to FluentD
 	data := make(logrus.Fields)
 	for k, v := range entry.Data {
+		if _, ok := hook.ignoreFields[k]; ok {
+			continue
+		}
+		if fn, ok := hook.filters[k]; ok {
+			v = fn(v)
+		}
 		data[k] = v
 	}
 
