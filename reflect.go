@@ -50,7 +50,7 @@ func converFromStruct(p interface{}, tagName string) interface{} {
 	values := toValue(p)
 	for i, max := 0, t.NumField(); i < max; i++ {
 		f := t.Field(i)
-		if f.PkgPath != "" {
+		if f.PkgPath != "" && !f.Anonymous {
 			continue // skip private field
 		}
 		tag, opts := parseTag(f, tagName)
