@@ -6,7 +6,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type animal struct {
+	Fur    bool
+	skills string
+}
+
 type Creature struct {
+	*animal
 	Name   string
 	Human  bool
 	Height int
@@ -18,6 +24,10 @@ func TestConvertToValueStruct(t *testing.T) {
 	assert := assert.New(t)
 
 	v := Creature{
+		animal: &animal{
+			Fur:    true,
+			skills: "kill,purr",
+		},
 		Name:   "cat",
 		Height: 50,
 		Weight: 4,
@@ -32,6 +42,8 @@ func TestConvertToValueStruct(t *testing.T) {
 	assert.Equal(v.Weight, r["Weight"])
 	assert.Equal(v.Alias, r["nickname"])
 	assert.Equal(v.Human, r["Human"])
+	assert.Equal(v.Fur, r["Fur"])
+	assert.NotContains(r, "skills")
 }
 
 func TestConvertToValueSlice(t *testing.T) {
