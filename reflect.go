@@ -68,7 +68,10 @@ func convertFromStructDeep(result map[string]interface{}, tagName string, t refl
 			if vv.Kind() == reflect.Ptr {
 				vv = vv.Elem()
 			}
-			convertFromStructDeep(result, tagName, tt, vv)
+
+			if vv.Kind() == reflect.Struct {
+				convertFromStructDeep(result, tagName, tt, vv)
+			}
 			continue
 		}
 
