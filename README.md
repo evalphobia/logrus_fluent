@@ -29,7 +29,7 @@ Fluentd Hook for Logrus <img src="http://i.imgur.com/hTeVwmJ.png" width="40" hei
 
 ```go
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/evalphobia/logrus_fluent"
 )
 
