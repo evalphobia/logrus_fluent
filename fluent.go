@@ -42,6 +42,7 @@ type FluentHook struct {
 	levels []logrus.Level
 	tag    *string
 
+	messageField string
 	ignoreFields map[string]struct{}
 	filters      map[string]func(interface{}) interface{}
 }
@@ -56,6 +57,7 @@ func New(host string, port int) (*FluentHook, error) {
 	return &FluentHook{
 		levels:       defaultLevels,
 		Fluent:       fd,
+		messageField: MessageField,
 		ignoreFields: make(map[string]struct{}),
 		filters:      make(map[string]func(interface{}) interface{}),
 	}, nil
@@ -69,6 +71,7 @@ func NewHook(host string, port int) *FluentHook {
 		port:         port,
 		levels:       defaultLevels,
 		tag:          nil,
+		messageField: MessageField,
 		ignoreFields: make(map[string]struct{}),
 		filters:      make(map[string]func(interface{}) interface{}),
 	}
@@ -96,6 +99,11 @@ func (hook *FluentHook) Tag() string {
 // SetTag sets custom static tag to override tag in the message fields.
 func (hook *FluentHook) SetTag(tag string) {
 	hook.tag = &tag
+}
+
+// SetMessageField sets custom message field.
+func (hook *FluentHook) SetMessageField(messageField string) {
+	hook.messageField = messageField
 }
 
 // AddIgnore adds field name to ignore.
@@ -142,7 +150,7 @@ func (hook *FluentHook) Fire(entry *logrus.Entry) error {
 	setLevelString(entry, data)
 	tag := hook.getTagAndDel(entry, data)
 	if tag != entry.Message {
-		setMessage(entry, data)
+		hook.setMessage(entry, data)
 	}
 
 	fluentData := ConvertToValue(data, TagName)
@@ -175,12 +183,18 @@ func (hook *FluentHook) getTagAndDel(entry *logrus.Entry, data logrus.Fields) st
 	return tag
 }
 
-func setLevelString(entry *logrus.Entry, data logrus.Fields) {
-	data["level"] = entry.Level.String()
+func (hook *FluentHook) setMessage(entry *logrus.Entry, data logrus.Fields) {
+	if _, ok := data[hook.messageField]; ok {
+		return
+	}
+	var v interface{}
+	v = entry.Message
+	if fn, ok := hook.filters[hook.messageField]; ok {
+		v = fn(v)
+	}
+	data[hook.messageField] = v
 }
 
-func setMessage(entry *logrus.Entry, data logrus.Fields) {
-	if _, ok := data[MessageField]; !ok {
-		data[MessageField] = entry.Message
-	}
+func setLevelString(entry *logrus.Entry, data logrus.Fields) {
+	data["level"] = entry.Level.String()
 }
