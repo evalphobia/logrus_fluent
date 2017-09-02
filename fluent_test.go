@@ -53,6 +53,36 @@ func TestNew(t *testing.T) {
 		t.Errorf("hook should not be nil")
 	case len(hook.levels) != len(defaultLevels):
 		t.Errorf("hook.levels should be defaultLevels")
+	case hook.Fluent == nil:
+		t.Errorf("hook.Fluent should not be nil")
+	case hook.messageField != MessageField:
+		t.Errorf("hook.messageField should be %s", MessageField)
+	}
+}
+
+func TestNewWithConfig(t *testing.T) {
+	_, port := newMockServer(t, nil)
+	conf := Config{
+		Host:                testHOST,
+		Port:                port,
+		DefaultMessageField: "DefaultMessageField",
+	}
+	hook, err := NewWithConfig(conf)
+	switch {
+	case err != nil:
+		t.Errorf("error on New: %s", err.Error())
+	case hook == nil:
+		t.Errorf("hook should not be nil")
+	case hook.conf.Host != testHOST:
+		t.Errorf("hook.host should be %s, but %s", testHOST, hook.conf.Host)
+	case hook.conf.Port != port:
+		t.Errorf("hook.port should be %d, but %d", port, hook.conf.Port)
+	case len(hook.levels) != len(defaultLevels):
+		t.Errorf("hook.levels should be defaultLevels")
+	case hook.Fluent == nil:
+		t.Errorf("hook.Fluent should not be nil")
+	case hook.messageField != "DefaultMessageField":
+		t.Errorf("hook.messageField should be DefaultMessageField")
 	}
 }
 
@@ -62,12 +92,16 @@ func TestNewHook(t *testing.T) {
 	switch {
 	case hook == nil:
 		t.Errorf("hook should not be nil")
-	case hook.host != testHOST:
-		t.Errorf("hook.host should be %s, but %s", testHOST, hook.host)
-	case hook.port != testPort:
-		t.Errorf("hook.port should be %d, but %d", testPort, hook.port)
+	case hook.conf.Host != testHOST:
+		t.Errorf("hook.host should be %s, but %s", testHOST, hook.conf.Host)
+	case hook.conf.Port != testPort:
+		t.Errorf("hook.port should be %d, but %d", testPort, hook.conf.Port)
 	case len(hook.levels) != len(defaultLevels):
 		t.Errorf("hook.levels should be defaultLevels")
+	case hook.Fluent != nil:
+		t.Errorf("hook.Fluent should be nil")
+	case hook.messageField != MessageField:
+		t.Errorf("hook.messageField should be %s", MessageField)
 	}
 }
 
@@ -244,6 +278,30 @@ func TestLogEntryMessageReceivedWithTag(t *testing.T) {
 	assertLogHook(t, f, entryMessage, assertion)
 }
 
+func TestLogEntryMessageReceivedWithCustomMessageField(t *testing.T) {
+	conf := Config{
+		DefaultTag:          fieldTag,
+		DefaultMessageField: "my-message-field",
+	}
+
+	f := logrus.Fields{
+		"value": fieldValue,
+	}
+
+	assertion := func(result string) {
+		switch {
+		case !strings.Contains(result, assertFieldTagAsFluentTag):
+			t.Errorf("message should contain fluent-tag from field")
+		case !strings.Contains(result, assertFieldValue):
+			t.Errorf("message should contain value from field")
+		case !strings.Contains(result, "\xb0my-message-field\xaeMyEntryMessage"):
+			t.Errorf("message should contain message from entry.Message")
+		}
+	}
+
+	assertLogMessageWithConfig(t, conf, f, entryMessage, assertion)
+}
+
 func TestLogEntryMessageReceivedWithMessage(t *testing.T) {
 	f := logrus.Fields{
 		"message": fieldMessage,
@@ -382,13 +440,7 @@ func assertLogMessage(t *testing.T, f logrus.Fields, message string, tag string,
 		if tag != "" {
 			hook.SetTag(tag)
 		}
-		logger := logrus.New()
-		logger.Hooks.Add(hook)
-
-		for i := 0; i < defaultLoopCount; i++ {
-			logger.WithFields(f).Error(message)
-			assertFunc(<-localData)
-		}
+		assertHook(t, hook, f, message, assertFunc, localData)
 	}
 
 	// assert persistent logger
@@ -396,19 +448,33 @@ func assertLogMessage(t *testing.T, f logrus.Fields, message string, tag string,
 		port := getOrCreateMockServer(t, data)
 		hook, err := New(testHOST, port)
 		if err != nil {
-			t.Errorf("Error on NewHookWithLogger: %s", err.Error())
+			t.Errorf("Error on New: %s", err.Error())
 		}
 		if tag != "" {
 			hook.SetTag(tag)
 		}
+		assertHook(t, hook, f, message, assertFunc, data)
+	}
+}
 
-		logger := logrus.New()
-		logger.Hooks.Add(hook)
+func assertLogMessageWithConfig(t *testing.T, conf Config, f logrus.Fields, message string, assertFunc func(string)) {
+	port := getOrCreateMockServer(t, data)
+	conf.Port = port
+	conf.Host = testHOST
+	hook, err := NewWithConfig(conf)
+	if err != nil {
+		t.Errorf("Error on NewWithConfig: %s", err.Error())
+	}
+	assertHook(t, hook, f, message, assertFunc, data)
+}
 
-		for i := 0; i < defaultLoopCount; i++ {
-			logger.WithFields(f).Error(message)
-			assertFunc(<-data)
-		}
+func assertHook(t *testing.T, hook *FluentHook, f logrus.Fields, message string, assertFunc func(string), data chan string) {
+	logger := logrus.New()
+	logger.Hooks.Add(hook)
+
+	for i := 0; i < defaultLoopCount; i++ {
+		logger.WithFields(f).Error(message)
+		assertFunc(<-data)
 	}
 }
 

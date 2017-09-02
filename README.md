@@ -34,7 +34,10 @@ import (
 )
 
 func main() {
-	hook, err := logrus_fluent.New("localhost", 24224)
+	hook, err := logrus_fluent.NewWithConfig(logrus_fluent.Config{
+		Host: "localhost",
+		Port: 24224,
+	})
 	if err != nil {
 		panic(err)
 	}
