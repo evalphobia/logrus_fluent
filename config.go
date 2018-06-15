@@ -17,6 +17,7 @@ type Config struct {
 	DefaultMessageField   string
 	DefaultIgnoreFields   map[string]struct{}
 	DefaultFilters        map[string]func(interface{}) interface{}
+	LevelStringer         func(logrus.Level) string
 
 	// from fluent.Config
 	// see https://github.com/fluent/fluent-logger-golang/blob/master/fluent/fluent.go

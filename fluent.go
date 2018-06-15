@@ -44,6 +44,8 @@ type FluentHook struct {
 	messageField string
 	ignoreFields map[string]struct{}
 	filters      map[string]func(interface{}) interface{}
+
+	levelStringer func(logrus.Level) string
 }
 
 // New returns initialized logrus hook for fluentd with persistent fluentd logger.
@@ -81,6 +83,11 @@ func NewWithConfig(conf Config) (*FluentHook, error) {
 	}
 	if conf.DefaultMessageField != "" {
 		hook.messageField = conf.DefaultMessageField
+	}
+	if conf.LevelStringer == nil {
+		hook.levelStringer = logrus.Level.String
+	} else {
+		hook.levelStringer = conf.LevelStringer
 	}
 	if hook.ignoreFields == nil {
 		hook.ignoreFields = make(map[string]struct{})
@@ -170,7 +177,7 @@ func (hook *FluentHook) Fire(entry *logrus.Entry) error {
 		data[k] = v
 	}
 
-	setLevelString(entry, data)
+	setLevelString(hook.levelStringer,entry, data)
 	tag := hook.getTagAndDel(entry, data)
 	if tag != entry.Message {
 		hook.setMessage(entry, data)
@@ -218,6 +225,6 @@ func (hook *FluentHook) setMessage(entry *logrus.Entry, data logrus.Fields) {
 	data[hook.messageField] = v
 }
 
-func setLevelString(entry *logrus.Entry, data logrus.Fields) {
-	data["level"] = entry.Level.String()
+func setLevelString(stringer func(logrus.Level) string, entry *logrus.Entry, data logrus.Fields) {
+	data["level"] = stringer(entry.Level)
 }
