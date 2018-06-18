@@ -130,17 +130,17 @@ func TestLevelStringer(t *testing.T) {
 		return "Hooked " + level.String()
 	}
 
-	expected :="Hooked error"
-	conf := Config{LevelStringer:altStringer}
+	expected := "Hooked error"
+	conf := Config{LevelStringer: altStringer}
 	fields := logrus.Fields{
 		"value": fieldValue,
 	}
 	assertFunc := func(actual string) {
-		if ! strings.Contains(actual,expected) {
-			t.Errorf("actual %v should contain %v",actual,expected)
+		if !strings.Contains(actual, expected) {
+			t.Errorf("actual %v should contain %v", actual, expected)
 		}
 	}
-	assertLogMessageWithConfig(t,conf,fields,"test message",assertFunc)
+	assertLogMessageWithConfig(t, conf, fields, "test message", assertFunc)
 
 }
 

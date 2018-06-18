@@ -177,7 +177,7 @@ func (hook *FluentHook) Fire(entry *logrus.Entry) error {
 		data[k] = v
 	}
 
-	setLevelString(hook.levelStringer,entry, data)
+	setLevelString(hook.levelStringer, entry, data)
 	tag := hook.getTagAndDel(entry, data)
 	if tag != entry.Message {
 		hook.setMessage(entry, data)
