@@ -125,6 +125,25 @@ func TestLevels(t *testing.T) {
 	}
 }
 
+func TestLevelStringer(t *testing.T) {
+	altStringer := func(level logrus.Level) string {
+		return "Hooked " + level.String()
+	}
+
+	expected := "Hooked error"
+	conf := Config{LevelStringer: altStringer}
+	fields := logrus.Fields{
+		"value": fieldValue,
+	}
+	assertFunc := func(actual string) {
+		if !strings.Contains(actual, expected) {
+			t.Errorf("actual %v should contain %v", actual, expected)
+		}
+	}
+	assertLogMessageWithConfig(t, conf, fields, "test message", assertFunc)
+
+}
+
 func TestSetLevels(t *testing.T) {
 	hook := FluentHook{}
 
