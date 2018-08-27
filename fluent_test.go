@@ -66,7 +66,7 @@ func TestNewWithConfig(t *testing.T) {
 		Host:                testHOST,
 		Port:                port,
 		DefaultMessageField: "DefaultMessageField",
-		DefaultIgnoreFields: map[string]struct{}{"ignored": struct{}{}},
+		DefaultIgnoreFields: map[string]struct{}{"ignored": {}},
 		DefaultFilters: map[string]func(interface{}) interface{}{
 			"filtered": func(x interface{}) interface{} {
 				return x
