@@ -66,6 +66,12 @@ func TestNewWithConfig(t *testing.T) {
 		Host:                testHOST,
 		Port:                port,
 		DefaultMessageField: "DefaultMessageField",
+		DefaultIgnoreFields: map[string]struct{}{"ignored": {}},
+		DefaultFilters: map[string]func(interface{}) interface{}{
+			"filtered": func(x interface{}) interface{} {
+				return x
+			},
+		},
 	}
 	hook, err := NewWithConfig(conf)
 	switch {
@@ -83,6 +89,10 @@ func TestNewWithConfig(t *testing.T) {
 		t.Errorf("hook.Fluent should not be nil")
 	case hook.messageField != "DefaultMessageField":
 		t.Errorf("hook.messageField should be DefaultMessageField")
+	case len(hook.ignoreFields) != len(conf.DefaultIgnoreFields):
+		t.Errorf("hook.ignoreFields should be same as conf.DefaultIgnoreFields")
+	case len(hook.filters) != len(conf.DefaultFilters):
+		t.Errorf("hook.filters should be same as conf.DefaultFilters")
 	}
 }
 
