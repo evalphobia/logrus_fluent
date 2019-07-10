@@ -11,6 +11,9 @@ func ConvertToValue(p interface{}, tagName string) interface{} {
 	rv := toValue(p)
 	switch rv.Kind() {
 	case reflect.Struct:
+		if err, ok := p.(error); ok {
+			return err.Error()
+		}
 		return convertFromStruct(rv.Interface(), tagName)
 	case reflect.Map:
 		return convertFromMap(rv, tagName)

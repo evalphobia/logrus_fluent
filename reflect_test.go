@@ -1,6 +1,7 @@
 package logrus_fluent
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,19 @@ type Creature struct {
 	Weight int
 	Alias  string `fluent:"nickname"`
 	Cute   bool   `fluent:"-"`
+}
+
+func TestConvertToValuError(t *testing.T) {
+	assert := assert.New(t)
+
+	err := errors.New("the error")
+	data := map[string]interface{} {"error": err}
+
+	result := ConvertToValue(data, TagName)
+
+	r, ok := result.(map[string]interface{})
+	assert.True(ok)
+	assert.Equal(err.Error(), r["error"])
 }
 
 func TestConvertToValueStruct(t *testing.T) {
