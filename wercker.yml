@@ -4,13 +4,13 @@ build:
   steps:
     - setup-go-workspace
     - script:
+        name: go get
+        code: |
+          go get -v ./...
+    - script:
         name: lint
         code: |
           make lint
-    - script:
-        name: go get
-        code: |
-          go get -t -v ./...
     - script:
         name: test
         code: |
