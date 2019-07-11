@@ -31,6 +31,7 @@ type Config struct {
 	AsyncConnect       bool
 	MarshalAsJSON      bool
 	SubSecondPrecision bool
+	RequestAck         bool
 }
 
 // FluentConfig converts data to fluent.Config.
@@ -49,5 +50,6 @@ func (c Config) FluentConfig() fluent.Config {
 		Async:              c.AsyncConnect,
 		MarshalAsJSON:      c.MarshalAsJSON,
 		SubSecondPrecision: c.SubSecondPrecision,
+		RequestAck:         c.RequestAck,
 	}
 }
