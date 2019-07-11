@@ -44,6 +44,7 @@ type FluentHook struct {
 	messageField string
 	ignoreFields map[string]struct{}
 	filters      map[string]func(interface{}) interface{}
+	customizers  []func(entry *logrus.Entry, data logrus.Fields)
 }
 
 // New returns initialized logrus hook for fluentd with persistent fluentd logger.
@@ -145,6 +146,11 @@ func (hook *FluentHook) AddFilter(name string, fn func(interface{}) interface{})
 	hook.filters[name] = fn
 }
 
+// AddCustomizer adds a custom function to modify data.
+func (hook *FluentHook) AddCustomizer(fn func(entry *logrus.Entry, data logrus.Fields)) {
+	hook.customizers = append(hook.customizers, fn)
+}
+
 // Fire is invoked by logrus and sends log to fluentd logger.
 func (hook *FluentHook) Fire(entry *logrus.Entry) error {
 	var logger *fluent.Fluent
@@ -177,6 +183,11 @@ func (hook *FluentHook) Fire(entry *logrus.Entry) error {
 	tag := hook.getTagAndDel(entry, data)
 	if tag != entry.Message {
 		hook.setMessage(entry, data)
+	}
+
+	// modify data to your own needs.
+	for _, fn := range hook.customizers {
+		fn(entry, data)
 	}
 
 	fluentData := ConvertToValue(data, TagName)

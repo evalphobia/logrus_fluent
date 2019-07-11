@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -132,6 +133,31 @@ func TestLevels(t *testing.T) {
 	case levels[0] != logrus.WarnLevel:
 		t.Errorf("hook.Levels() should have logrus.WarnLevel")
 	}
+}
+
+func TestLevelWithCustomizers(t *testing.T) {
+	a := assert.New(t)
+
+	hook, err := NewWithConfig(Config{
+		Port: getOrCreateMockServer(t, data),
+		Host: testHOST,
+	})
+	a.NoError(err, "Error on NewWithConfig")
+
+	hook.AddCustomizer(func(entry *logrus.Entry, data logrus.Fields) {
+		data["level"] = "Hooked " + entry.Level.String()
+	})
+	a.Len(hook.customizers, 1, "hook.customers has %d length, but %d", 1, len(hook.customizers))
+
+	fields := logrus.Fields{
+		"value": fieldValue,
+	}
+
+	const expected = "Hooked error"
+	assertFunc := func(result string) {
+		a.Contains(result, expected, fmt.Sprintf("actual %v should contain %v", result, expected))
+	}
+	assertHook(t, hook, fields, "test message", assertFunc, data)
 }
 
 func TestSetLevels(t *testing.T) {
