@@ -30,7 +30,7 @@ func TestConvertToValuError(t *testing.T) {
 	assert := assert.New(t)
 
 	err := errors.New("the error")
-	data := map[string]interface{} {"error": err}
+	data := map[string]interface{}{"error": err}
 
 	result := ConvertToValue(data, TagName)
 

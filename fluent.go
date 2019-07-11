@@ -213,8 +213,8 @@ func (hook *FluentHook) setMessage(entry *logrus.Entry, data logrus.Fields) {
 	if _, ok := data[hook.messageField]; ok {
 		return
 	}
-	var v interface{}
-	v = entry.Message
+
+	var v interface{} = entry.Message
 	if fn, ok := hook.filters[hook.messageField]; ok {
 		v = fn(v)
 	}
