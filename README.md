@@ -1,7 +1,7 @@
 Fluentd Hook for Logrus <img src="http://i.imgur.com/hTeVwmJ.png" width="40" height="40" alt=":walrus:" class="emoji" title=":walrus:"/>
 ----
 
-[![GoDoc][1]][2] [![License: Apache 2.0][3]][4] [![Release][5]][6] [![Travis Status][7]][8] [![wercker Status][19]][20] [![Coveralls Coverage][9]][10] [![Go Report Card][13]][14] [![Downloads][15]][16]
+[![GoDoc][1]][2] [![License: Apache 2.0][3]][4] [![Release][5]][6] [![Travis Status][7]][8] [![wercker Status][19]][20] [![Coveralls Coverage][9]][10] [![Go Report Card][13]][14] [![Downloads][15]][16] [![Code Climate][21]][22] [![BCH compliance][23]][24]
 
 [1]: https://godoc.org/github.com/evalphobia/logrus_fluent?status.svg
 [2]: https://godoc.org/github.com/evalphobia/logrus_fluent
@@ -23,6 +23,11 @@ Fluentd Hook for Logrus <img src="http://i.imgur.com/hTeVwmJ.png" width="40" hei
 [18]: https://github.com/evalphobia/logrus_fluent/stargazers
 [19]: https://app.wercker.com/status/04fb4bde79d8c54bb681af664394d2e4/s/master
 [20]: https://app.wercker.com/project/byKey/04fb4bde79d8c54bb681af664394d2e4
+[21]: https://codeclimate.com/github/evalphobia/logrus_fluent/badges/gpa.svg
+[22]: https://codeclimate.com/github/evalphobia/logrus_fluent
+[23]: https://bettercodehub.com/edge/badge/evalphobia/logrus_fluent?branch=master
+[24]: https://bettercodehub.com/
+
 
 
 ## Usage
