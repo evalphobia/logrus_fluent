@@ -39,7 +39,6 @@ const (
 	assertEntryMessageAsFluentTag = "\x94\xaeMyEntryMessage\xd2"
 
 	staticTag                  = "STATIC_TAG"
-	assertStaticTag            = "\xa3tag\xaaSTATIC_TAG"
 	assertStaticTagAsFluentTag = "\x94\xaaSTATIC_TAG\xd2"
 )
 
