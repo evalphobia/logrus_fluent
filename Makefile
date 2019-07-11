@@ -9,4 +9,5 @@ test:
 
 coverage:
 	go test -covermode=count -coverprofile=coverage.txt ./...
-	$(GOPATH)/bin/goveralls -coverprofile=coverage.txt -service=travis-ci
+	@type goveralls > /dev/null || go get -u github.com/mattn/goveralls
+	goveralls -coverprofile=coverage.txt -service=travis-ci
